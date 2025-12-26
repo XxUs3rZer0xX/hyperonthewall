@@ -1,0 +1,8 @@
+langchain
+langgraph
+langchain-openai
+python-dotenv
+apify-client
+pydantic
+streamlit
+pandas
