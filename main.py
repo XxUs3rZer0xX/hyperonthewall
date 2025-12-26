@@ -18,6 +18,7 @@ builder.set_entry_point("scout")
 builder.add_edge("scout", "manager")
 builder.add_edge("manager", END)
 graph = builder.compile()
+app = graph
 
 if __name__ == "__main__":
     print("AI Agency Bot Started...")

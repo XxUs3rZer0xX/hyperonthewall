@@ -1,61 +1,75 @@
 import streamlit as st
 import pandas as pd
-from main import graph  # Import the LangGraph workflow you built
+from main import app # Your LangGraph workflow
 
-# Page Config
-st.set_page_config(page_title="AI Influencer Scout", page_icon="🤖", layout="wide")
+# 1. Page Configuration
+st.set_page_config(page_title="AI Agency - Secure Portal", page_icon="🔐", layout="wide")
 
-# Sidebar for API Status
-with st.sidebar:
-    st.title("Settings")
-    st.info("Ensure your .env file has valid OpenAI and Apify keys.")
-    if st.button("Reset Session"):
-        st.rerun()
+# 2. Session State Initialization
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-# Main UI
+# 3. Simple Authentication Function
+def check_login():
+    """Validates user credentials."""
+    # Replace these with your desired credentials
+    VALID_USER = "admin"
+    VALID_PASS = "hypefy123"
+
+    if st.session_state["username"] == VALID_USER and st.session_state["password"] == VALID_PASS:
+        st.session_state.logged_in = True
+        # Clear sensitive inputs from session state
+        del st.session_state["password"]
+    else:
+        st.error("❌ Invalid username or password")
+
+# 4. Login Screen UI
+if not st.session_state.logged_in:
+    # Centering the login form using columns
+    _, col, _ = st.columns([1, 2, 1])
+    with col:
+        st.title("🔐 AI Agency Login")
+        with st.form("login_form"):
+            st.text_input("Username", key="username", placeholder="Enter your username")
+            st.text_input("Password", key="password", type="password", placeholder="Enter your password")
+            st.form_submit_button("Login", on_click=check_login)
+    st.stop() # Prevents any code below from running until logged in
+
+# 5. Main Dashboard Content (Only visible after login)
+st.sidebar.title("Settings")
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.rerun()
+
 st.title("🚀 AI Influencer Agency Dashboard")
-st.markdown("Use the power of autonomous agents to find and pitch creators in seconds.")
-
-# User Input
 query = st.text_input("What are you looking for?", placeholder="e.g., Denver Fitness Influencers")
 
 if st.button("Start AI Scout") and query:
     with st.spinner("Agents are working..."):
-        # Run the LangGraph workflow
         inputs = {"user_request": query}
-
-        # Create columns for the output
         col1, col2 = st.columns(2)
 
-        influencer_list = ""
-        outreach_emails = ""
-
         # Stream the results
-        for output in graph.stream(inputs):
+        for output in app.stream(inputs):
             for key, value in output.items():
                 if key == "scout":
-                    influencer_list = value["influencer_list"]
                     with col1:
                         st.subheader("🕵️ Talent Scout Results")
-                        st.write(influencer_list)
+                        st.write(value["influencer_list"])
+                        # Store for CSV export
+                        st.session_state["last_scout"] = value["influencer_list"]
                 elif key == "manager":
-                    outreach_emails = value["outreach_emails"]
                     with col2:
                         st.subheader("✉️ Campaign Manager Brief")
-                        st.write(outreach_emails)
+                        st.write(value["outreach_emails"])
 
-        # After the agents finish, convert the results into a DataFrame
-        # Note: This assumes your agent output is a list or can be parsed into one
-        data = {"Influencer": [influencer_list]}
-        df = pd.DataFrame(data)
-
-        # Add a download button for the CSV
+    # 6. Professional CSV Export Feature
+    if "last_scout" in st.session_state:
+        df = pd.DataFrame({"Research Results": [st.session_state["last_scout"]]})
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📥 Download Influencer List as CSV",
+            label="📥 Download Results as CSV",
             data=csv,
-            file_name='influencer_results.csv',
+            file_name='influencer_research.csv',
             mime='text/csv',
         )
-
-    st.success("Campaign generation complete!")
