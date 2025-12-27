@@ -21,6 +21,10 @@ def scout_agent(state):
 def manager_agent(state):
     if llm is None:
         return {"outreach_emails": "Mock: outreach emails generated"}
-    prompt = f"Create a brief for: {state['influencer_list']}"
-    res = llm.invoke([SystemMessage(content='You are a Manager.'), prompt])
-    return {"outreach_emails": res.content}
+    try:
+        prompt = f"Create a brief for: {state['influencer_list']}"
+        res = llm.invoke([SystemMessage(content='You are a Manager.'), prompt])
+        return {"outreach_emails": res.content}
+    except Exception as e:
+        print(f"OpenAI API call failed: {e}. Using mock data.")
+        return {"outreach_emails": "Mock: outreach emails generated"}

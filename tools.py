@@ -7,10 +7,15 @@ load_dotenv()
 
 # Initialize the client with your token
 # You found this in Settings > API & Integrations on Apify
-client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
+apify_token = os.getenv("APIFY_API_TOKEN")
+client = ApifyClient(apify_token) if apify_token else None
 
 def search_influencers(niche: str, max_retries=3, retry_delay=5):
     """Replaces mock data with a live Instagram search with retry logic."""
+    if client is None:
+        print("APIFY_API_TOKEN not set. Using mock data.")
+        return [{"username": "test_user", "followers": 5000, "bio": "Mock bio"}]
+
     for attempt in range(max_retries):
         try:
             # 1. Prepare the search parameters
