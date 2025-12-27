@@ -6,3 +6,5 @@ apify-client
 pydantic
 streamlit
 pandas
+pytest
+pytest-mock
